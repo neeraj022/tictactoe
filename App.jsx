@@ -6,55 +6,81 @@ class Game extends React.Component {
 
   constructor() {
     super();
+    this.state={
+      won: null,
+      turn: true,
+      stepNumber: 0,
+      history: [{squares: Array(9).fill(null)}]
+    }
   }
+
+  handleClick(i) {
+    const history=this.state.history;
+    const current = history[history.length-1];
+    const squares = current.squares.slice();
+    if(calculateWinner(squares) || squares[i])
+    {
+      let winner=calculateWinner(squares);
+      if(winner)
+      {
+        this.setState({won: winner});
+      }
+      return ;
+    }
+    squares[i] =  this.state.turn? 'X' : 'O';
+    this.setState({turn: !this.state.turn, stepNumber: history.length})
+    this.setState({history: history.concat([{
+      squares: squares
+    }])});
+  }
+
+  jumpTo(step) {
+  this.setState({
+    stepNumber: step,
+    turn: (step % 2) ? false : true,
+  });
+}
 
 
   render() {
+    const history=this.state.history;
+    const current = history[this.state.stepNumber];;
+
+    const moves = history.map((step, move) => {
+  const desc = move ?
+    'Move #' + move :
+    'Game start';
+  return (
+    <li>
+      <a key={move} href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+    </li>
+  );
+});
+
+
     return(<div>
       <h1>Tic Tac Toe Game</h1>
-
-      <Board/>
+      <h3>Player {this.state.won? this.state.won+' won': (this.state.turn? 'X' : 'O')+' Chance'} </h3>
+      <Board onClick={(i)=> this.handleClick(i)} squares={current.squares}/>
+      <ol>{moves}</ol>
+      <button onClick={() => this.setState({history: [{squares: Array(9).fill(null)}], turn: true, won: null, stepNumber: 0})}>Reset</button>
       </div>);
     }
   }
 
   class Board extends React.Component {
 
-    constructor()
-    {
-      super();
-      this.state={
-        won: null,
-        turn: true,
-        squares: Array(9).fill(null)
-      }
-    }
 
-    handleClick(i) {
-      const squares = this.state.squares.slice();
-      if(calculateWinner(squares) || squares[i])
-      {
-        let winner=calculateWinner(squares);
-        if(winner)
-        {
-          this.setState({won: winner});
-        }
-        return ;
-      }
-      squares[i] =  this.state.turn? 'X' : 'O';
-      this.setState({turn: !this.state.turn})
-      this.setState({squares: squares});
-    }
 
 
     renderSquare(i)
     {
-      return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)}/>;
+      return <Square value={this.props.squares[i]} onClick={() => this.props.onClick(i)}/>;
     }
 
     render() {
       return (<div>
-        <h3>Player {this.state.won? this.state.won+' won': (this.state.turn? 'X' : 'O')+' Chance'} </h3>
+
         <div className="board-row">
         {this.renderSquare(0)}
         {this.renderSquare(1)}
@@ -70,7 +96,7 @@ class Game extends React.Component {
         {this.renderSquare(7)}
         {this.renderSquare(8)}
         </div>
-        <button onClick={() => this.setState({squares: [], turn: true, won: null})}>Reset</button>
+
         </div>);
       }
     }
